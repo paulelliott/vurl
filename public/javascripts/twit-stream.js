@@ -21,6 +21,8 @@ String.prototype.linktag=function(){
     });
 };
 var showTweetLinks='none';
+var tweetIds=[];
+tweetsToDisplay = [1];
 function fetch_tweets(elem){
     elem=$(elem);
     keyword=escape(elem.attr('title'));
@@ -28,62 +30,80 @@ function fetch_tweets(elem){
     var url="http://search.twitter.com/search.json?q="+keyword+"&rpp="+num+"&callback=?";
     $.getJSON(url,function(json){
         $(json.results).each(function(){
-            var tTime=new Date(Date.parse(this.created_at));
-            var cTime=new Date();
-            var sinceMin=Math.round((cTime-tTime)/60000);
-            if(sinceMin==0){
-                var sinceSec=Math.round((cTime-tTime)/1000);
-                if(sinceSec<10)
-                    var since='less than 10 seconds ago';
-                else if(sinceSec<20)
-                    var since='less than 20 seconds ago';
-                else
-                    var since='half a minute ago';
+            if(tweetIds.indexOf(this.id) > 0) {
+              // do nothing
+            } else {
+              var tTime=new Date(Date.parse(this.created_at));
+              since = getTimeSince(tTime);
+
+              tweetBy = getTweetBy(this);
+
+              var tweet='<div class="tweet"><div class="tweet-left"><a target="_blank" href="http://twitter.com/'+this.from_user+'"><img width="48" height="48" alt="'+this.from_user+' on Twitter" src="'+this.profile_image_url+'" /></a></div><div class="tweet-right"><p class="text">'+this.text.linkify().linkuser().linktag().replace(/<a/g,'<a target="_blank"')+'<br />'+tweetBy+'</p></div><br style="clear: both;" /></div>';
+
+              tweetsToDisplay.push(tweet);
             }
-            else if(sinceMin==1){
-                var sinceSec=Math.round((cTime-tTime)/1000);
-                if(sinceSec==30)
-                    var since='half a minute ago';
-                else if(sinceSec<60)
-                    var since='less than a minute ago';
-                else
-                    var since='1 minute ago';
-            }
-            else if(sinceMin<45)
-                var since=sinceMin+' minutes ago';
-            else if(sinceMin>44&&sinceMin<60)
-                var since='about 1 hour ago';
-            else if(sinceMin<1440){
-                var sinceHr=Math.round(sinceMin/60);
-                if(sinceHr==1)
-                    var since='about 1 hour ago';
-                else
-                    var since='about '+sinceHr+' hours ago';
-            }
-            else if(sinceMin>1439&&sinceMin<2880)
-                var since='1 day ago';
-            else{
-                var sinceDay=Math.round(sinceMin/1440);
-                var since=sinceDay+' days ago';
-            }
-            var tweetBy='<a class="tweet-user" target="_blank" href="http://twitter.com/'+this.from_user+'">@'+this.from_user+'</a> <span class="tweet-time">'+since+'</span>';
-            if(showTweetLinks.indexOf('reply')!=-1)
-                tweetBy=tweetBy+' &middot; <a class="tweet-reply" target="_blank" href="http://twitter.com/?status=@'+this.from_user+' &in_reply_to_status_id='+this.id+'&in_reply_to='+this.from_user+'">Reply</a>';
-            if(showTweetLinks.indexOf('view')!=-1)
-                tweetBy=tweetBy+' &middot; <a class="tweet-view" target="_blank" href="http://twitter.com/'+this.from_user+'/statuses/'+this.id+'">View Tweet</a>';
-            if(showTweetLinks.indexOf('rt')!=-1)
-                tweetBy=tweetBy+' &middot; <a class="tweet-rt" target="_blank" href="http://twitter.com/?status=RT @'+this.from_user+' '+escape(this.text.replace(/&quot;/g,'"'))+'&in_reply_to_status_id='+this.id+'&in_reply_to='+this.from_user+'">RT</a>';
-            var tweet='<div class="tweet"><div class="tweet-left"><a target="_blank" href="http://twitter.com/'+this.from_user+'"><img width="48" height="48" alt="'+this.from_user+' on Twitter" src="'+this.profile_image_url+'" /></a></div><div class="tweet-right"><p class="text">'+this.text.linkify().linkuser().linktag().replace(/<a/g,'<a target="_blank"')+'<br />'+tweetBy+'</p></div><br style="clear: both;" /></div>';
-            elem.append(tweet);
         });
     });
+    alert(tweetsToDisplay);
+    for(i=0; i++; i>tweetsToDisplay.length) {
+      elem.prepend(tweetsToDisplay[tweet]);
+    }
+    $('.tweets_last_updated').html(tweetsLastUpdated());
     return(false);
 }
-$(function(){
-    showTweetLinks=showTweetLinks.toLowerCase();
-    if(showTweetLinks.indexOf('all')!=-1)
-        showTweetLinks='reply,view,rt';
-    $('.twitStream').each(function(){
-        fetch_tweets(this);
-    });
-});
+
+function tweetsLastUpdated() {
+  now = new Date();
+  return "Last updated: " + String(now.getHours()) + ':' + String(now.getMinutes()) + ':' + String(now.getSeconds())
+}
+function getTimeSince(tTime) {
+  var cTime=new Date();
+  var sinceMin=Math.round((cTime-tTime)/60000);
+  if(sinceMin==0){
+    var sinceSec=Math.round((cTime-tTime)/1000);
+    if(sinceSec<10)
+      var since='less than 10 seconds ago';
+    else if(sinceSec<20)
+      var since='less than 20 seconds ago';
+    else
+      var since='half a minute ago';
+  }
+  else if(sinceMin==1){
+    var sinceSec=Math.round((cTime-tTime)/1000);
+    if(sinceSec==30)
+      var since='half a minute ago';
+    else if(sinceSec<60)
+      var since='less than a minute ago';
+    else
+      var since='1 minute ago';
+  }
+  else if(sinceMin<45)
+    var since=sinceMin+' minutes ago';
+  else if(sinceMin>44&&sinceMin<60)
+    var since='about 1 hour ago';
+  else if(sinceMin<1440){
+    var sinceHr=Math.round(sinceMin/60);
+    if(sinceHr==1)
+      var since='about 1 hour ago';
+    else
+      var since='about '+sinceHr+' hours ago';
+  }
+  else if(sinceMin>1439&&sinceMin<2880)
+    var since='1 day ago';
+  else{
+    var sinceDay=Math.round(sinceMin/1440);
+    var since=sinceDay+' days ago';
+  }
+  return since;
+}
+
+function getTweetBy(tweet) {
+  var tweetBy='<a class="tweet-user" target="_blank" href="http://twitter.com/'+tweet.from_user+'">@'+tweet.from_user+'</a> <span class="tweet-time">'+since+'</span>';
+  if(showTweetLinks.indexOf('reply')!=-1)
+    tweetBy=tweetBy+' &middot; <a class="tweet-reply" target="_blank" href="http://twitter.com/?status=@'+tweet.from_user+' &in_reply_to_status_id='+tweet.id+'&in_reply_to='+tweet.from_user+'">Reply</a>';
+  if(showTweetLinks.indexOf('view')!=-1)
+    tweetBy=tweetBy+' &middot; <a class="tweet-view" target="_blank" href="http://twitter.com/'+tweet.from_user+'/statuses/'+tweet.id+'">View Tweet</a>';
+  if(showTweetLinks.indexOf('rt')!=-1)
+    tweetBy=tweetBy+' &middot; <a class="tweet-rt" target="_blank" href="http://twitter.com/?status=RT @'+tweet.from_user+' '+escape(tweet.text.replace(/&quot;/g,'"'))+'&in_reply_to_status_id='+tweet.id+'&in_reply_to='+tweet.from_user+'">RT</a>';
+  return tweetBy;
+}

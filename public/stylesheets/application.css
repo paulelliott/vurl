@@ -185,12 +185,19 @@ a#layout_history_link {
   border:2px solid #FFD324;
 }
 
-#tweets .tweet .tweet-left {
+.recent_tweets h2 {
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+.recent_tweets .tweets_last_updated {
+  font-size: smaller;
+  color: #999;
+}
+.recent_tweets #tweets .tweet .tweet-left {
   float: left;
   padding-right: 10px;
 }
-
-#tweets .tweet .tweet-left img {
+.recent_tweets #tweets .tweet .tweet-left img {
   border: 2px solid black;
 }
 

@@ -39,8 +39,10 @@
 
       - if current_vurl
         .span-13.last{:style => 'margin-top:40px;'}
-          #tweets.twitStream.20{:title => "http://vurl.me/#{current_vurl.slug}"}
-            %h2== Tweets that reference this vurl
+          .recent_tweets
+            %h2 Tweets that reference this vurl
+            .tweets_last_updated
+            #tweets.twitStream.5{:title => 'ravens'}
 
       %script{ :type => "text/javascript" }
         var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
